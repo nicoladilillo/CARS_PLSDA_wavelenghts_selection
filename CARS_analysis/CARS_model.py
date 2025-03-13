@@ -1063,7 +1063,7 @@ class CARS:
                 data.append({'Train_sizes': train_sizes[i], 'Score': train_scores[i, j], 'Set': 'Training'})
                 data.append({'Train_sizes': train_sizes[i], 'Score': validation_scores[i, j], 'Set': 'Validation'})
         plot_data = pd.DataFrame(data)
-        plot_data.to_csv(os.path.join(self.path, 'Learning_Curve_Data.csv'), index=False)
+        plot_data.to_csv(os.path.join(self.path, f'Learning_Curve_Data_{len_var}.csv'), index=False)
         plt.figure(figsize=(12, 8))
         sns.lineplot(data=plot_data, x='Train_sizes', y='Score', hue='Set', palette='viridis', linewidth=3, marker='o')
         plt.ylim(0.49, 1)

@@ -3,8 +3,7 @@
 ## Requirements
 
 ```bash
-pip install pandas numpy scikit-learn seaborn plotly tqdm
-pip install --upgrade nbformat
+conda env create -f environment.yml
 ```
 
 
