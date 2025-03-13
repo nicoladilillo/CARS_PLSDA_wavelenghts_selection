@@ -1,4 +1,3 @@
-#%%
 import pandas as pd
 import numpy as np
 from CARS_model import CARS
@@ -40,5 +39,3 @@ c = CARS(path, col_group, X_df, MAX_COMPONENTS=2, CV_FOLD=5, calibration=False, 
 c.perform_pca()
 c.cars_model(R=R, N=100, rmsecv=True, ars=True , MC_SAMPLES=0.8, start=0)
 c.save_results()
-
-#%%

@@ -73,36 +73,6 @@ class PLSDAClassifier(BaseEstimator, ClassifierMixin):
         y_pred_proba = np.hstack([1 - y_pred_continuous, y_pred_continuous])
         return y_pred_proba
 
-# class PLSDAClassifier(BaseEstimator, ClassifierMixin):
-#     def __init__(self, n_components=2):
-#         self.n_components = n_components
-#         self.pls = PLSRegression(n_components=self.n_components)
-
-#     def fit(self, X, y):
-#         # Ensure y is binary and encode it as 0 and 1
-#         self.classes_ = np.unique(y)
-#         y_binary = (y == self.classes_[1]).astype(int)
-#         self.y = y_binary
-#         self.pls.fit(X, y_binary)
-#         return self
-
-#     def predict(self, X):
-#         y_pred_continuous = self.pls.predict(X)
-        
-#         fpr, tpr, thresholds = roc_curve(self.y, y_pred_continuous)
-#         # Find the best threshold
-#         best_cutoff = thresholds[np.argmax(tpr - fpr)]
-
-#         y_pred = (y_pred_continuous >= best_cutoff).astype(int).ravel()
-#         return self.classes_[y_pred]
-
-#     def predict_proba(self, X):
-#         y_pred_continuous = self.pls.predict(X)
-#         # Return probabilities for both classes
-#         y_pred_proba = np.hstack([1 - y_pred_continuous, y_pred_continuous])
-#         return y_pred_proba
-
-
 class CARS:
     def __init__(self, path, col_group=None, X_df=None, MAX_LABEL=10, MAX_COMPONENTS=10, CV_FOLD=5, OPTIMAL_N=20, calibration=True, class_column='Class', test_percentage=0.3, scalar=None):        
         # Max number of labels to show in the scree plot
@@ -482,7 +452,7 @@ class CARS:
             y_pred = self._cross_predict(X, y, X_test, var_selected_i=var_selected_i, model_type=model_type)
         
         if confusion_matrix:
-            self._compute_confusion_matrix(y_test, y_pred, cutoff=cutoff)
+            self._compute_confusion_matrix(y_test, y_pred, len(var_selected_i), cutoff=cutoff)
         
         if all:
             _, _, _, roc_auc = self._compute_roc_auc(y_test, y_pred)
@@ -611,7 +581,7 @@ class CARS:
             plt.text(200, threshold+5, 'Threshold', color='red')        
     
         plt.savefig(f'{self.path}/Frequency_of_Wavelengths.pdf')
-        plt.show()
+        # plt.show()
         plt.close()
         
         # Plot the frequency of survived variables
@@ -638,7 +608,7 @@ class CARS:
             index=[0])], ignore_index=True)
             
         sns.lineplot(data=self.statiscs_df[self.statiscs_df['Run'] == run], x='Iteration', y='Selected Variables', linewidth=3, color=color_line)
-        plt.xlabel('Number of sampling runs')
+        plt.xlabel('Iteration')
         plt.ylabel('Selected Variables')
         # plt.rc('xtick',labelsize=18)
         # plt.rc('ytick',labelsize=18)
@@ -661,7 +631,7 @@ class CARS:
         
         # Seaborn plot
         sns.lineplot(data=self.statiscs_df[self.statiscs_df['Run'] == run], x='Iteration', y='Ratio')
-        plt.xlabel('Number of sampling runs')
+        plt.xlabel('Iteration')
         plt.ylabel('Ratio')
         plt.title('Ratio value sampling runs')
         plt.savefig(f'{self.path}/Ratio_value_sampling_runs.pdf')
@@ -678,7 +648,7 @@ class CARS:
         
         # Seaborn plot
         sns.lineplot(data=self.statiscs_df[self.statiscs_df['Run'] == run], x='Iteration', y='RMSECV')
-        plt.xlabel('Number of sampling runs')
+        plt.xlabel('Iteration')
         plt.ylabel('RMSECV')
         plt.title('RMSECV value sampling runs')
         plt.savefig(f'{self.path}/RMSECV_value_sampling_runs.pdf')
@@ -686,6 +656,7 @@ class CARS:
         plt.close()
 
     def plot_accuracy(self, run=0):
+        self.statiscs_df = self.statiscs_df.sort_values(by='Iteration', ascending=False)
         fig=px.line(self.statiscs_df[self.statiscs_df['Run'] == run], x='Iteration', y='Accuracy',
                     labels={'Iteration': 'Iteration', 'Accuracy': 'Accuracy'},
                     hover_name='Selected Wavelengths',
@@ -710,7 +681,7 @@ class CARS:
         plt.plot(best_accuracy_row['Iteration'].values[0], best_accuracy, 'ro')
         plt.text(best_accuracy_row['Iteration'].values[0]+1, best_accuracy, f'{best_accuracy:.2f}', verticalalignment='top', color='r')
         
-        plt.xlabel('Number of sampling runs')
+        plt.xlabel('Iteration')
         plt.ylabel('Accuracy')
         
         plt.xlim(0, self.statiscs_df[self.statiscs_df['Run'] == run]['Iteration'].max())
@@ -733,7 +704,7 @@ class CARS:
         
         # Seaborn plot
         sns.lineplot(data=self.coefficients_df[self.coefficients_df['Run'] == run], x='Iteration', y='Cofficients', hue='Wavelengths')
-        plt.xlabel('Number of sampling runs')
+        plt.xlabel('Iteration')
         plt.ylabel('Cofficients')
         plt.title('Cofficients sampling runs')
         plt.savefig(f'{self.path}/Cofficients_sampling_runs.pdf')
@@ -753,7 +724,7 @@ class CARS:
         
         # Seaborn plot
         sns.lineplot(data=coefficients_ext_df, legend=False)
-        plt.xlabel('Number of sampling runs')
+        plt.xlabel('Iteration')
         plt.ylabel('Cofficients')
         plt.title('Cofficients sampling runs')
         plt.savefig(f'{self.path}/Cofficients_sampling_runs.pdf')
@@ -764,7 +735,7 @@ class CARS:
     def plot_coefficients_1(self, run=0):
         all_cofficients = self.coefficients_df[self.coefficients_df['Run'] == run].pivot_table(index=['Iteration'], columns='Wavelengths', values='Cofficients').values
         plt.plot(all_cofficients)
-        plt.xlabel('Number of sampling runs')
+        plt.xlabel('Iteration')
         plt.ylabel('Cofficients')
         plt.title('Cofficients sampling runs')
 
@@ -1077,89 +1048,37 @@ class CARS:
         return b_accuracy, b_y_train, b_X_train
 
     def learning_curve(self, X, y, cutoff, len_var, model_type='PLS'):
-        # print(cutoff)
-        # scalar = StandardScaler()
-        # X = scalar.fit_transform(X)
-        
         if model_type == 'PLS':
-            # train_sizes=np.linspace(0.1, 1.0, 30)
-            model = PLSDAClassifier(n_components=self.MAX_COMPONENTS,cutoff=cutoff)
+            # For classification, instantiate PLSDAClassifier without externally providing cutoff.
+            model = PLSDAClassifier(n_components=self.MAX_COMPONENTS, cutoff=cutoff)
             train_sizes, train_scores, validation_scores = learning_curve(model, X, y,
-                train_sizes=np.linspace(0.1, 1.0, 30), scoring='accuracy', random_state=42, cv=self.CV_FOLD)
-            
-        # Prepare data for plotting individual folds
+                                                                           train_sizes=np.linspace(0.1, 1.0, 30), 
+                                                                           scoring='accuracy',
+                                                                           random_state=42, cv=self.CV_FOLD)
         data = []
         n_train_sizes = train_sizes.shape[0]
         n_folds = train_scores.shape[1]
-        
-        # print(f'Train sizes: {n_train_sizes} - Folds: {n_folds}')
-        # print(f'Train scores: {train_scores.shape} - Validation scores: {validation_scores.shape}')
-        
         for i in range(n_train_sizes):
             for j in range(n_folds):
-                data.append({
-                    'Train_sizes': train_sizes[i],
-                    'Score': train_scores[i, j],
-                    'Set': 'Training'
-                })
-                data.append({
-                    'Train_sizes': train_sizes[i],
-                    'Score': validation_scores[i, j],
-                    'Set': 'Validation'
-                })
-
+                data.append({'Train_sizes': train_sizes[i], 'Score': train_scores[i, j], 'Set': 'Training'})
+                data.append({'Train_sizes': train_sizes[i], 'Score': validation_scores[i, j], 'Set': 'Validation'})
         plot_data = pd.DataFrame(data)
-        plot_data.to_csv(f'{self.path}/Learning_Curve_Data.csv', index=False)
-
-        # Set the style of the plot
+        plot_data.to_csv(os.path.join(self.path, 'Learning_Curve_Data.csv'), index=False)
         plt.figure(figsize=(12, 8))
-        
-        sns.lineplot(plot_data, x='Train_sizes', y='Score', hue='Set', palette='viridis', linewidth=3, marker='o')
-    
+        sns.lineplot(data=plot_data, x='Train_sizes', y='Score', hue='Set', palette='viridis', linewidth=3, marker='o')
         plt.ylim(0.49, 1)
-        # Add labels and title
         plt.xlabel("Training Samples", fontsize=26)
         plt.ylabel("Accuracy", fontsize=26)
         plt.xticks(fontsize=24)
         plt.yticks(fontsize=24)
-        # plt.title("Learning Curve with All K-Fold Training and Testing Curves")
         plt.legend(loc="lower right", fontsize=26)
-
-        # # Save and show the plot
-        # if len_var is not None:
-        #     plt.savefig(f'{self.path}/Learning_Curve_{len_var}.pdf')
-        # else:
-        #     plt.savefig(f'{self.path}/Learning_Curve.pdf')
-            
-        # Titled
-        plt.title(f"{len_var} Wavelenghts", fontsize=28)
-        if len_var is not None:
-            plt.savefig(f'{self.path}/Learning_Curve_{len_var}_titled.pdf')
-        else:
-            plt.savefig(f'{self.path}/Learning_Curve_titled.pdf')
-            
+        title = f"{len_var} Wavelengths"
+        plt.title(title, fontsize=28)
+        filename = f'Learning_Curve_{len_var}_titled.pdf'
+        plt.savefig(os.path.join(self.path, filename))
         plt.show()
         plt.close()
-        
-        # # Plot mean training and validation scores
-        # plt.figure(figsize=(10, 6))
-        # mean_train_scores = train_scores.mean(axis=1)
-        # mean_validation_scores = validation_scores.mean(axis=1)
-        # plt.plot(train_sizes, mean_train_scores, 'o-', color='blue', label='Mean Training Score', linewidth=2)
-        # plt.plot(train_sizes, mean_validation_scores, 'o-', color='red', label='Mean Validation Score', linewidth=2)
 
-
-        # # Add labels and title
-        # plt.xlabel("Training Examples")
-        # plt.ylabel("Accuracy")
-        # # plt.title("Learning Curve with All K-Fold Training and Testing Curves")
-        # plt.legend(loc="best")
-        # plt.grid(True)
-
-        # # Save and show the plot
-        # # plt.savefig(f'{self.path}/Learning_Curve.pdf')
-        # plt.show()
-        # plt.close()
 
     
     def _read_pivot(self, path):
@@ -1169,7 +1088,7 @@ class CARS:
         X, y = self._random_input(df)
         return df, X, y
     
-    def _compute_confusion_matrix(self, y_test, y_pred, cutoff=None): 
+    def _compute_confusion_matrix(self, y_test, y_pred, len_var, cutoff=None): 
         
         y_pred_cutoff, _ = self._compute_y_pred_cutoff(y_test, y_pred, cutoff=cutoff)
         
@@ -1182,15 +1101,15 @@ class CARS:
         # fig = plt.figure(figsize=(8, 6))
         sns.heatmap(cm_df, linewidths=1, annot=True, fmt='d', cmap='viridis', center=True)
         
-        plt.xlabel('Predicted', fontsize=14)
-        plt.ylabel('True', fontsize=14)
-        plt.title('Confusion Matrix', fontsize=18)
+        plt.xlabel('Predicted', fontsize=18)
+        plt.ylabel('Actual', fontsize=18)
+        plt.title(f'{len_var} Wavelenghts', fontsize=18)
         
         # Put the correct labels
         # plt.xticks([0, 1], self.class_labels, ha='right')
         # plt.yticks([0, 1], self.class_labels, va='baseline')
         
-        plt.savefig(f'{self.path}/Confusion_Matrix.pdf')
+        plt.savefig(f'{self.path}/Confusion_Matrix_{len_var}.pdf')
         plt.show()
         plt.close()
         
