@@ -1,4 +1,4 @@
-# Evaluating and Optimizing Wavelength Selection Using the CCARS Algorithm and Hyperspectral Signals for Lettuce Classification Leveraging PLS-DA Model
+# Evaluating and Optimizing Wavelength Selection Using the CCARS Algorithm and Spectral Signals for Lettuce Classification Leveraging PLS-DA Model
 
 ## Requirements
 
