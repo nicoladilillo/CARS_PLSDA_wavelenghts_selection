@@ -79,7 +79,7 @@ df.loc[df.Date == 'day_1', 'Class'] = 'Healty'
 df.loc[df.Date == 'day_5', 'Day'] = '24-02-02'
 df.loc[df.Date == 'day_4', 'Day'] = '24-02-03'
 df.loc[df.Date == 'day_3', 'Day'] = '24-01-31'
-df.loc[df.Date == 'day_2', 'Day'] = '24-01-30'
+df.loc[df.Date == 'day_2', 'Day'] = 'day_2'
 df.loc[df.Date == 'day_1', 'Day'] = '24-01-29'
 
 df.to_csv('spectral_data.csv',index=False)

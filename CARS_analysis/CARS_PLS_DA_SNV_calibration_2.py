@@ -7,16 +7,10 @@ R = 500
 df = pd.read_csv('../spectral_data.csv')
 
 wavelengths_to_select = df[(df['Wavelength'] <= 950) & (df['Wavelength'] >= 450)]['Wavelength'].unique()
-date_to_select = ['day_1', '24-02-01', 'day_5']
-date_to_select = ['day_1', '24-01-30', 'day_3', '24-02-01', 'day_5']
+date_to_select = ['day_1', 'day_4', 'day_5']
+date_to_select = ['day_1', 'day_2', 'day_3', 'day_4', 'day_5']
 
 n_df = df[df['Wavelength'].isin(wavelengths_to_select) & df['Date'].isin(date_to_select) & df['Acquisition'].isin([1])].reset_index(drop=True)
-
-n_df.loc[n_df.Date == 'day_5', 'Class'] = 'Unhealty'  
-n_df.loc[n_df.Date == '24-02-01', 'Class'] = 'Unhealty'  
-n_df.loc[n_df.Date == 'day_3', 'Class'] = 'Unhealty'  
-n_df.loc[n_df.Date == '24-01-30', 'Class'] = 'Healty' 
-n_df.loc[n_df.Date == 'day_1', 'Class'] = 'Healty' 
 
 n_df['Reflectance_avg_log'] = np.log10(n_df['Reflectance'])
 
