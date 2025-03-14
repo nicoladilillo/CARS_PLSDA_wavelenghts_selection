@@ -1,29 +1,22 @@
 from itertools import combinations
 import os
-from matplotlib.cm import ScalarMappable
-from matplotlib.colors import Normalize
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import confusion_matrix, f1_score, mean_squared_error, precision_score, recall_score
-from sklearn.preprocessing import LabelBinarizer, RobustScaler
+from sklearn.preprocessing import LabelBinarizer
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import cross_val_predict, learning_curve, permutation_test_score, train_test_split
+from sklearn.model_selection import learning_curve, train_test_split
 import matplotlib.pyplot as plt
 import plotly.express as px
 import random
 import math
 from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
-from sklearn import preprocessing
 import seaborn as sns
 from sklearn.model_selection import StratifiedKFold
 from tqdm import tqdm
 from sklearn.metrics import roc_curve, auc
-from sklearn.preprocessing import MinMaxScaler
-
-from matplotlib.cm import viridis
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -1096,6 +1089,9 @@ class CARS:
         
         # Create a dataframe from the confusion matrix cm
         cm_df = pd.DataFrame(cm, index=self.class_labels, columns=self.class_labels)
+        
+        # Save this dataframe to a csv file
+        cm_df.to_csv(f'{self.path}/Confusion_Matrix_{len_var}.csv')
         
         # Plot the confusion matrix
         # fig = plt.figure(figsize=(8, 6))
